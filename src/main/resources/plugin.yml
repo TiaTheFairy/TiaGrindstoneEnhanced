@@ -1,0 +1,24 @@
+name: TiaGrindstoneEnhanced
+version: '${version}'
+main: org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced
+api-version: '1.20'
+depend: [Vault]
+
+commands:
+  tiagrindstoneenhanced:
+    aliases: [tge]
+    description: Main command
+    usage: /tge [subcommand]
+permissons:
+  tiagrindstone.command.open:
+    description: Allow player to open the enhanced grindstone menu
+    default: true
+  tiagrindstone.grindstone:
+    description: Allow player to open the enhanced grindstone menu by right click the grindstone
+    default: true
+  tiagrindstone.item.bypass:
+    description: Allow player to clean special list items
+    default: false
+  tiagrindstone.enchantment.bypass:
+    description: Allow player to bypass enchantments whitelist/blacklist
+    default: false
