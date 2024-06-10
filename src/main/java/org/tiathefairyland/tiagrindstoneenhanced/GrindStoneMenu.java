@@ -4,6 +4,7 @@ import net.kyori.adventure.text.TranslatableComponent;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -57,32 +58,32 @@ public class GrindStoneMenu implements InventoryHolder {
         player.openInventory(inventory);
     }
 
-    public static List<ItemStack> getItemEnchantments(ItemStack item, Player player){
+    public static Map<Enchantment, Integer> getItemEnchantments(ItemStack item, Player player){
         Map<Enchantment, Integer> enchantments = new HashMap<>();
 
         if(item.getType() == Material.ENCHANTED_BOOK){
             EnchantmentStorageMeta enchantmentStorageMeta = (EnchantmentStorageMeta) item.getItemMeta();
-            enchantments = enchantmentStorageMeta.getStoredEnchants();
+            enchantments.putAll(enchantmentStorageMeta.getStoredEnchants());
         }
         else{
-            enchantments = item.getEnchantments();
+            enchantments.putAll(item.getEnchantments());
         }
 
         if(!player.hasPermission("tiagrindstone.enchantment.bypass")){
-            List<String> blacklist = plugin.getConfig().getStringList("enchantment-list.list");
-            blacklist.stream().forEach(enchantments::remove);
+            List<String> list = plugin.getConfig().getStringList("enchantment-list.list");
+            if(plugin.getConfig().getBoolean("enchantment-list.use-as-blacklist")){
+                enchantments.keySet().removeIf(ekey -> list.contains(ekey.getKey().getKey().toLowerCase()));
+            }
+            else{
+                enchantments.keySet().removeIf(ekey -> !list.contains(ekey.getKey().getKey().toLowerCase()));
+            }
         }
 
-        List<ItemStack> enchantedBooks = new ArrayList<>();
-        enchantments.forEach((enchantment, level) -> {
-            ItemStack enchantedBook = new ItemStack(Material.ENCHANTED_BOOK);
-            EnchantmentStorageMeta meta = (EnchantmentStorageMeta) enchantedBook.getItemMeta();
-            meta.addStoredEnchant(enchantment, level, true);
-            enchantedBook.setItemMeta(meta);
-            enchantedBooks.add(enchantedBook);
-        });
+        if(enchantments.size() == 0){
+            player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.empty")));
+        }
 
-        return enchantedBooks;
+        return enchantments;
     }
 
     public static void clearEnchantments(Inventory inventory){
@@ -95,7 +96,16 @@ public class GrindStoneMenu implements InventoryHolder {
     }
 
     public static void setupEnchantments(ItemStack item, Player player, Inventory inventory){
-        List<ItemStack> enchantedBooks = getItemEnchantments(item, player);
+        Map<Enchantment, Integer> enchantments = getItemEnchantments(item, player);
+
+        List<ItemStack> enchantedBooks = new ArrayList<>();
+        enchantments.forEach((enchantment, level) -> {
+            ItemStack enchantedBook = new ItemStack(Material.ENCHANTED_BOOK);
+            EnchantmentStorageMeta meta = (EnchantmentStorageMeta) enchantedBook.getItemMeta();
+            meta.addStoredEnchant(enchantment, level, true);
+            enchantedBook.setItemMeta(meta);
+            enchantedBooks.add(enchantedBook);
+        });
 
         clearEnchantments(inventory);
         if(!enchantedBooks.isEmpty()){
@@ -140,14 +150,7 @@ public class GrindStoneMenu implements InventoryHolder {
             int price = 0;
 
             if(plugin.getConfig().getBoolean("costs.removing-all.count-all")){
-                ItemMeta itemMeta = item.getItemMeta();
-                Map<Enchantment, Integer> enchants;
-                if(itemMeta instanceof EnchantmentStorageMeta){
-                    enchants = ((EnchantmentStorageMeta) itemMeta).getStoredEnchants();
-                }
-                else{
-                    enchants = item.getEnchantments();
-                }
+                Map<Enchantment, Integer> enchants = getItemEnchantments(item, player);
                 for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
                     price = price + countCostPrice(entry.getKey(), entry.getValue());
                 }
@@ -216,6 +219,7 @@ public class GrindStoneMenu implements InventoryHolder {
             }
             String enchantName = enchantment.getKey().getKey();
             enchantName = enchantName.substring(0, 1).toUpperCase() + enchantName.substring(1);
+            enchantName = enchantName.replace("_", " ");
             player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove").replace("%enchantment%", enchantName)));
         }
         else{
@@ -230,14 +234,7 @@ public class GrindStoneMenu implements InventoryHolder {
         String priceType = plugin.getConfig().getString("costs.removing-all.type");
         int price = 0;
 
-        ItemMeta itemMeta = item.getItemMeta();
-        Map<Enchantment, Integer> enchants;
-        if(itemMeta instanceof EnchantmentStorageMeta){
-            enchants = ((EnchantmentStorageMeta) itemMeta).getStoredEnchants();
-        }
-        else{
-            enchants = item.getEnchantments();
-        }
+        Map<Enchantment, Integer> enchants = getItemEnchantments(item, player);
 
         if(plugin.getConfig().getBoolean("costs.remaining-all.count-all")){
             for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){

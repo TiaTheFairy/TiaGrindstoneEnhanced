@@ -58,7 +58,7 @@ public class GrindstoneClicks implements Listener {
 
             //      Remove all slot
             else if (slot == 8){
-                if(event.getCurrentItem().getType() == null){
+                if(event.getCurrentItem() == null){
                     event.setCancelled(true);
                 }
                 if(event.getCurrentItem().getType() == Material.GRINDSTONE){

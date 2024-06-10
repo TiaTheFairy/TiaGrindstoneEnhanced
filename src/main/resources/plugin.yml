@@ -9,7 +9,7 @@ commands:
     aliases: [tge]
     description: Main command
     usage: /tge [subcommand]
-permissons:
+permissions:
   tiagrindstone.command.open:
     description: Allow player to open the enhanced grindstone menu
     default: true
