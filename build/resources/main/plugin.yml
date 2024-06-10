@@ -1,5 +1,5 @@
 name: TiaGrindstoneEnhanced
-version: '1.0-SNAPSHOT'
+version: '1.0.0'
 main: org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced
 api-version: '1.20'
 depend: [Vault]
@@ -9,7 +9,7 @@ commands:
     aliases: [tge]
     description: Main command
     usage: /tge [subcommand]
-permissons:
+permissions:
   tiagrindstone.command.open:
     description: Allow player to open the enhanced grindstone menu
     default: true

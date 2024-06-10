@@ -58,13 +58,10 @@ public class GrindstoneClicks implements Listener {
 
             //      Remove all slot
             else if (slot == 8){
-                if(event.getCurrentItem() == null){
-                    event.setCancelled(true);
-                }
-                if(event.getCurrentItem().getType() == Material.GRINDSTONE){
+                if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.GRINDSTONE){
                     GrindStoneMenu.removeAllEnchantments(player, event.getInventory());
-                    event.setCancelled(true);
                 }
+                event.setCancelled(true);
             }
 
             //      Holder slot
@@ -92,7 +89,6 @@ public class GrindstoneClicks implements Listener {
         String name = event.getView().getTitle();
         String title = plugin.format(plugin.getConfig().getString("i18n.gui.title"));
 
-        event.getInventory();
         if (name.equalsIgnoreCase(title)) {
             event.setCancelled(true);
         }

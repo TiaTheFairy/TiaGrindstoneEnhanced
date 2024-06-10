@@ -17,23 +17,29 @@ public class GrindstoneOpen implements Listener {
 
     @EventHandler
     public void openMenu(PlayerInteractEvent event){
-        if(!plugin.getConfig().getBoolean("grindstone.override-grindstone")){
+        if(!plugin.getConfig().getBoolean("grindstone.override-grindstone") || event.getClickedBlock() == null){
             return;
         }
-        event.setCancelled(true);
 
-        Player player = event.getPlayer();
         if(event.getClickedBlock().getType() == Material.GRINDSTONE){
-            if(plugin.getConfig().getBoolean("grindstone.player-with-permission")){
+            Player player = event.getPlayer();
+
+            if(plugin.getConfig().getBoolean("grindstone.open-with-permission")){
                 if(player.hasPermission("tiagrindstone.grindstone")){
+                    event.setCancelled(true);
                     GrindStoneMenu grindStoneMenu = new GrindStoneMenu(plugin, player);
                     grindStoneMenu.open();
                 }
                 else{
-                    player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.permission-grindstone")));
+                    if(!plugin.getConfig().getBoolean("no-permission-use-vanilla")){
+                        player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.permission-grindstone")));
+                        event.setCancelled(true);
+                    }
+
                 }
             }
             else{
+                event.setCancelled(true);
                 GrindStoneMenu grindStoneMenu = new GrindStoneMenu(plugin, player);
                 grindStoneMenu.open();
             }

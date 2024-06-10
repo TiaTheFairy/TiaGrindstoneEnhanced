@@ -45,7 +45,10 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
     }
 
     public String format(String string){
-        return ChatColor.translateAlternateColorCodes('&', string);
+        if(string.contains("&")){
+            return ChatColor.translateAlternateColorCodes('&', string);
+        }
+        return format("&f" + string);
     }
 
     public List<String> format(List<String> list){
@@ -54,9 +57,5 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
             newList.add(format(string));
         }
         return newList;
-    }
-
-    public void reloadPluginConfig(){
-
     }
 }

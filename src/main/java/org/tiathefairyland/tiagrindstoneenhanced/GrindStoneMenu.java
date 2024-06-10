@@ -34,9 +34,11 @@ public class GrindStoneMenu implements InventoryHolder {
         String title = plugin.format(plugin.getConfig().getString("i18n.gui.title"));
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
-        ItemStack holder = new ItemStack(Material.WHITE_STAINED_GLASS_PANE);
+        String material = plugin.getConfig().getString("i18n.gui.holder.type");
+        ItemStack holder = new ItemStack(Material.getMaterial(material));
         ItemMeta holderMeta = holder.getItemMeta();
-        holderMeta.setDisplayName(" ");
+        holderMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.holder.name")));
+        holderMeta.setLore(plugin.format(plugin.getConfig().getStringList("i18n.gui.holder.lore")));
         holderMeta.setCustomModelData(1);
         holder.setItemMeta(holderMeta);
 
@@ -210,12 +212,20 @@ public class GrindStoneMenu implements InventoryHolder {
         }
 
         if(cost(priceType, price, player)){
-            originalItem.removeEnchantment(enchantment);
-            if(originalItem.getType() == Material.BOOK){
-                ItemMeta meta1 = originalItem.getItemMeta();
-                if(((EnchantmentStorageMeta) meta1).getStoredEnchants().size() == 0){
+
+            if(originalItem.getType() == Material.ENCHANTED_BOOK){
+                EnchantmentStorageMeta meta1 = (EnchantmentStorageMeta)originalItem.getItemMeta();
+                meta1.removeStoredEnchant(enchantment);
+                if(meta1.getStoredEnchants().isEmpty()){
                     originalItem.setType(Material.BOOK);
+                    originalItem.setItemMeta(null);
                 }
+                else{
+                    originalItem.setItemMeta(meta1);
+                }
+            }
+            else{
+                originalItem.removeEnchantment(enchantment);
             }
             String enchantName = enchantment.getKey().getKey();
             enchantName = enchantName.substring(0, 1).toUpperCase() + enchantName.substring(1);
