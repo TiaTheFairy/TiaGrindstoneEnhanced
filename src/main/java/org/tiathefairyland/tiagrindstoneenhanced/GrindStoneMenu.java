@@ -40,7 +40,7 @@ public class GrindStoneMenu implements InventoryHolder {
         holder.setItemMeta(holderMeta);
 
         for (int i = 0; i < 54; i++) {
-            if ((i < 18 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) && i != 4){
+            if ((i < 18 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) && i != 4 && i != 8){
                 inventory.setItem(i, holder);
             }
         }
@@ -91,6 +91,7 @@ public class GrindStoneMenu implements InventoryHolder {
         for(int slot : slotList){
             inventory.setItem(slot, null);
         }
+        inventory.setItem(8, null);
     }
 
     public static void setupEnchantments(ItemStack item, Player player, Inventory inventory){
@@ -131,6 +132,42 @@ public class GrindStoneMenu implements InventoryHolder {
                 book.setItemMeta(meta);
                 inventory.setItem(slotList.get(i), book);
             }
+
+            ItemStack grindstone = new ItemStack(Material.GRINDSTONE);
+            ItemMeta grindstoneMeta = grindstone.getItemMeta();
+            grindstoneMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.clear")));
+            String costType = plugin.getConfig().getString("costs.removing-all.type");
+            int price = 0;
+
+            if(plugin.getConfig().getBoolean("costs.removing-all.count-all")){
+                ItemMeta itemMeta = item.getItemMeta();
+                Map<Enchantment, Integer> enchants;
+                if(itemMeta instanceof EnchantmentStorageMeta){
+                    enchants = ((EnchantmentStorageMeta) itemMeta).getStoredEnchants();
+                }
+                else{
+                    enchants = item.getEnchantments();
+                }
+                for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
+                    price = price + countCostPrice(entry.getKey(), entry.getValue());
+                }
+                price = Math.min(plugin.getConfig().getInt("costs.removing-all.count-all-max"), price);
+            }
+            else{
+                price = plugin.getConfig().getInt("costs.removing-all.fix-amount");
+            }
+
+            List<String> loreTemplate = plugin.getConfig().getStringList("i18n.gui.lore");
+            List<String> lores = new ArrayList<>();
+            for(String loreLine : loreTemplate){
+                loreLine = loreLine.replace("%type%", plugin.getConfig().getString("i18n.gui.types." + costType));
+                loreLine = loreLine.replace("%unit%", plugin.getConfig().getString("i18n.gui.unit." + costType));
+                loreLine = loreLine.replace("%price%", String.valueOf(price));
+                lores.add(plugin.format(loreLine));
+            }
+            grindstoneMeta.setLore(lores);
+            grindstone.setItemMeta(grindstoneMeta);
+            inventory.setItem(8, grindstone);
         }
     }
 
@@ -169,8 +206,69 @@ public class GrindStoneMenu implements InventoryHolder {
             return;
         }
 
+        if(cost(priceType, price, player)){
+            originalItem.removeEnchantment(enchantment);
+            if(originalItem.getType() == Material.BOOK){
+                ItemMeta meta1 = originalItem.getItemMeta();
+                if(((EnchantmentStorageMeta) meta1).getStoredEnchants().size() == 0){
+                    originalItem.setType(Material.BOOK);
+                }
+            }
+            String enchantName = enchantment.getKey().getKey();
+            enchantName = enchantName.substring(0, 1).toUpperCase() + enchantName.substring(1);
+            player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove").replace("%enchantment%", enchantName)));
+        }
+        else{
+            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
+            player.sendMessage(plugin.format(notEnough));
+        }
+        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+    }
+
+    public static void removeAllEnchantments(Player player, Inventory inventory){
+        ItemStack item = inventory.getItem(4);
+        String priceType = plugin.getConfig().getString("costs.removing-all.type");
+        int price = 0;
+
+        ItemMeta itemMeta = item.getItemMeta();
+        Map<Enchantment, Integer> enchants;
+        if(itemMeta instanceof EnchantmentStorageMeta){
+            enchants = ((EnchantmentStorageMeta) itemMeta).getStoredEnchants();
+        }
+        else{
+            enchants = item.getEnchantments();
+        }
+
+        if(plugin.getConfig().getBoolean("costs.remaining-all.count-all")){
+            for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
+                price = price + countCostPrice(entry.getKey(), entry.getValue());
+            }
+            price = Math.max(plugin.getConfig().getInt("costs.removing-all.count-all-max"), price);
+        }
+        else{
+            price = plugin.getConfig().getInt("costs.removing-all.fix-amount");
+        }
+
+        if(cost(priceType, price, player)){
+            for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
+                item.removeEnchantment(entry.getKey());
+            }
+
+            if(item.getType() == Material.ENCHANTED_BOOK){
+                item.setType(Material.BOOK);
+            }
+
+            player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove-all")));
+        }
+        else{
+            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
+            player.sendMessage(plugin.format(notEnough));
+        }
+        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+    }
+
+    public static boolean cost(String priceType, int price, Player player){
         Economy economy = plugin.getVault().getEconomy();
-        String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
         switch (priceType){
             case "none":
                 break;
@@ -179,9 +277,7 @@ public class GrindStoneMenu implements InventoryHolder {
                 break;
             case "take-coin":
                 if(economy.getBalance(player) < price){
-                    player.sendMessage(plugin.format(notEnough));
-                    player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-                    return;
+                    return false;
                 }
                 economy.withdrawPlayer(player, price);
                 break;
@@ -190,9 +286,7 @@ public class GrindStoneMenu implements InventoryHolder {
                 break;
             case "take-exp":
                 if(player.getTotalExperience() < price){
-                    player.sendMessage(plugin.format(notEnough));
-                    player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-                    return;
+                    return false;
                 }
                 int exp = player.getTotalExperience();
                 player.setTotalExperience(0);
@@ -205,19 +299,13 @@ public class GrindStoneMenu implements InventoryHolder {
                 break;
             case "take-exp-lvl":
                 if(player.getLevel() < price){
-                    player.sendMessage(plugin.format(notEnough));
-                    player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-                    return;
+                    return false;
                 }
                 player.setLevel(player.getLevel() - price);
                 break;
             default:
                 plugin.getLogger().warning(plugin.getConfig().getString("i18n.consoles.warning.invalid-type"));
         }
-
-        originalItem.removeEnchantment(enchantment);
-        player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove").replace("%enchantment%", enchantment.getName())));
-
-        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+        return true;
     }
 }

@@ -67,16 +67,16 @@ costs:
     type: give-exp
     #   Count all enchantments in the item for price?
     count-all: true
-    #   Count all enchantments for price but max at a number.
-    count-all-max: 100
-    #   If count-all is false, set the amount here
+    #   Count all enchantments for price but max at a number. Use positive integer only !
+    count-all-max: 100000
+    #   If count-all is false, set the amount here. Use positive integer only !
     fix-amount: 50
 
   removing-single:
     type: take-coin
-    #   Costs per level, eg, LVL5 enchantment take 5 x per-level = 50L
+    #   Costs per level, eg, LVL5 enchantment take 5 x per-level = 50. Use positive integer only !
     per-level: 10
-    #   These enchantments are on different price. eg, sharpness:11L
+    #   These enchantments are on different price. eg, sharpness:11. Use positive integer only !
     override-price:
       - sharpness:11
       - protection:9
@@ -95,6 +95,7 @@ i18n:
     permission-grindstone: "&e[Enhanced Grindstone] &cYou don't have the permission to use the grindstone."
     permission-open: "&e[Enhanced Grindstone] &cYou don't have the permission to use Enhanced Grindstone."
     remove: "&e[Enhanced Grindstone] &aSuccessfully remove %enchantment% from your item."
+    remove-all: "&e[Enhanced Grindstone] &aSuccessfully remove all enchantments from your item."
     not-allow: "&e[Enhanced Grindstone] &cThis item is not allowed in Grindstone."
     not-enough: "&e[Enhanced Grindstone] &cYou don't have enough %type% to do this!"
     item-dropped: "&e[Enhanced Grindstone] &aYou forgot your item! It's dropped at your location because your inventory is full!"
@@ -102,6 +103,7 @@ i18n:
     reload-new: "&e[Enhanced Grindstone] &aConfig file not exists! Regenerating!"
   gui:
     title: "&eEnhanced Grindstone"
+    clear: "&eRemove All Enchantments"
     lore:
       - ""
       - "&b%type% to remove this enchantment"
@@ -131,3 +133,7 @@ i18n:
     warning:
       negative-price: "Price cannot be negative number! Action cancelled!"
       invalid-type: "Invalid price type! Charge none!"
+
+
+#   DO NOT EDIT THIS LINE UNLESS YOU ARE TOLD TO !
+version: 1.0.0

@@ -56,6 +56,17 @@ public class GrindstoneClicks implements Listener {
                 }
             }
 
+            //      Remove all slot
+            else if (slot == 8){
+                if(event.getCurrentItem().getType() == null){
+                    event.setCancelled(true);
+                }
+                if(event.getCurrentItem().getType() == Material.GRINDSTONE){
+                    GrindStoneMenu.removeAllEnchantments(player, event.getInventory());
+                    event.setCancelled(true);
+                }
+            }
+
             //      Holder slot
             else if ((slot < 18 || slot >= 45 || slot % 9 == 0 || (slot + 1) % 9 == 0) && slot <= 53) {
                 event.setCancelled(true);
