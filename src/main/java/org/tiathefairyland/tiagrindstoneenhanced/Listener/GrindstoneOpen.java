@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.tiathefairyland.tiagrindstoneenhanced.GrindStoneMenu;
 import org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced;
@@ -17,7 +18,7 @@ public class GrindstoneOpen implements Listener {
 
     @EventHandler
     public void openMenu(PlayerInteractEvent event){
-        if(!plugin.getConfig().getBoolean("grindstone.override-grindstone") || event.getClickedBlock() == null){
+        if(!plugin.getConfig().getBoolean("grindstone.override-grindstone") || event.getClickedBlock() == null || event.getAction() == Action.LEFT_CLICK_BLOCK){
             return;
         }
 

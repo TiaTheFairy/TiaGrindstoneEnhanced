@@ -21,12 +21,17 @@ public class GrindStoneMenu implements InventoryHolder {
     public static TiaGrindstoneEnhanced plugin;
     public Player player;
     private Inventory inventory;
+
     public static List<Integer> slotList = new ArrayList<>(Arrays.asList(19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43));
+    private static int currentPage;
+    private static int pages;
+
 
     public GrindStoneMenu(TiaGrindstoneEnhanced plugin, Player player){
         GrindStoneMenu.plugin = plugin;
         this.player = player;
         this.inventory = getInventory();
+        this.currentPage = 1;
     }
 
     @Override
@@ -34,17 +39,10 @@ public class GrindStoneMenu implements InventoryHolder {
         String title = plugin.format(plugin.getConfig().getString("i18n.gui.title"));
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
-        String material = plugin.getConfig().getString("i18n.gui.holder.type");
-        ItemStack holder = new ItemStack(Material.getMaterial(material));
-        ItemMeta holderMeta = holder.getItemMeta();
-        holderMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.holder.name")));
-        holderMeta.setLore(plugin.format(plugin.getConfig().getStringList("i18n.gui.holder.lore")));
-        holderMeta.setCustomModelData(1);
-        holder.setItemMeta(holderMeta);
-
+        ItemStack itemHolder = getHolderSlot();
         for (int i = 0; i < 54; i++) {
             if ((i < 18 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) && i != 4 && i != 8){
-                inventory.setItem(i, holder);
+                inventory.setItem(i, itemHolder);
             }
         }
 
@@ -60,7 +58,7 @@ public class GrindStoneMenu implements InventoryHolder {
         player.openInventory(inventory);
     }
 
-    public static Map<Enchantment, Integer> getItemEnchantments(ItemStack item, Player player){
+    public static Map<Enchantment, Integer> getItemEnchantments(ItemStack item, Player player)  {
         Map<Enchantment, Integer> enchantments = new HashMap<>();
 
         if(item.getType() == Material.ENCHANTED_BOOK){
@@ -89,12 +87,13 @@ public class GrindStoneMenu implements InventoryHolder {
     }
 
     public static void clearEnchantments(Inventory inventory){
-        ItemStack empty = new ItemStack(Material.AIR);
-
         for(int slot : slotList){
             inventory.setItem(slot, null);
         }
-        inventory.setItem(8, null);
+        ItemStack holderItem = getHolderSlot();
+        inventory.setItem(8, holderItem);
+        inventory.setItem(45, holderItem);
+        inventory.setItem(53, holderItem);
     }
 
     public static void setupEnchantments(ItemStack item, Player player, Inventory inventory){
@@ -111,8 +110,48 @@ public class GrindStoneMenu implements InventoryHolder {
 
         clearEnchantments(inventory);
         if(!enchantedBooks.isEmpty()){
-            int pages = enchantedBooks.size() / 21 + 1;
-            for(int i=0; i < Math.min(21 * pages, enchantedBooks.size()); i++){
+            pages = enchantedBooks.size() / 21 + 1;
+
+            ItemStack nextPage = new ItemStack(Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.next.type")));
+            ItemMeta nextPageMeta = nextPage.getItemMeta();
+
+            nextPageMeta.setDisplayName(plugin.format(plugin.replacePlaceholder(
+                    plugin.getConfig().getString("i18n.gui.page.next.name"),
+                    new ArrayList<>(Arrays.asList("%total%", "%current%")),
+                    new ArrayList<>(Arrays.asList(String.valueOf(pages), String.valueOf(currentPage))))));
+
+            nextPageMeta.setLore(plugin.format(plugin.replacePlaceholder(
+                    plugin.getConfig().getStringList("i18n.gui.page.next.lore"),
+                    new ArrayList<>(Arrays.asList("%total%", "%current%")),
+                    new ArrayList<>(Arrays.asList(String.valueOf(pages), String.valueOf(currentPage))
+            ))));
+
+            nextPage.setItemMeta(nextPageMeta);
+            inventory.setItem(53, nextPage);
+
+
+            ItemStack previousPage = new ItemStack(Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.previous.type")));
+            ItemMeta previousPageMeta = nextPage.getItemMeta();
+
+            previousPageMeta.setDisplayName(plugin.format(plugin.replacePlaceholder(
+                    plugin.getConfig().getString("i18n.gui.page.previous.name"),
+                    new ArrayList<>(Arrays.asList("%total%", "%current%")),
+                    new ArrayList<>(Arrays.asList(String.valueOf(pages), String.valueOf(currentPage))))));
+
+            previousPageMeta.setLore(plugin.format(plugin.replacePlaceholder(
+                    plugin.getConfig().getStringList("i18n.gui.page.previous.lore"),
+                    new ArrayList<>(Arrays.asList("%total%", "%current%")),
+                    new ArrayList<>(Arrays.asList(String.valueOf(pages), String.valueOf(currentPage))
+                    ))));
+
+            previousPage.setItemMeta(previousPageMeta);
+            inventory.setItem(45, previousPage);
+
+
+            int startIndex = (currentPage - 1) * 21;
+            int endIndex = Math.min(currentPage * 21, enchantedBooks.size());
+
+            for(int i= startIndex; i < endIndex; i++){
                 ItemStack book = enchantedBooks.get(i);
                 ItemMeta meta = book.getItemMeta();
 
@@ -142,7 +181,7 @@ public class GrindStoneMenu implements InventoryHolder {
                 }
                 meta.setLore(lores);
                 book.setItemMeta(meta);
-                inventory.setItem(slotList.get(i), book);
+                inventory.setItem(slotList.get(i % 21), book);
             }
 
             ItemStack grindstone = new ItemStack(Material.GRINDSTONE);
@@ -162,15 +201,13 @@ public class GrindStoneMenu implements InventoryHolder {
                 price = plugin.getConfig().getInt("costs.removing-all.fix-amount");
             }
 
-            List<String> loreTemplate = plugin.getConfig().getStringList("i18n.gui.lore");
-            List<String> lores = new ArrayList<>();
-            for(String loreLine : loreTemplate){
-                loreLine = loreLine.replace("%type%", plugin.getConfig().getString("i18n.gui.types." + costType));
-                loreLine = loreLine.replace("%unit%", plugin.getConfig().getString("i18n.gui.unit." + costType));
-                loreLine = loreLine.replace("%price%", String.valueOf(price));
-                lores.add(plugin.format(loreLine));
-            }
-            grindstoneMeta.setLore(lores);
+            grindstoneMeta.setLore(
+                    plugin.replacePlaceholder(plugin.getConfig().getStringList("i18n.gui.lore"), new ArrayList<>(Arrays.asList("%type%", "%unit%", "%price")),
+                    new ArrayList<>(Arrays.asList(
+                            plugin.getConfig().getString("i18n.gui.types." + costType),
+                            plugin.getConfig().getString("i18n.gui.unit." + costType),
+                            String.valueOf(price)))));
+
             grindstone.setItemMeta(grindstoneMeta);
             inventory.setItem(8, grindstone);
         }
@@ -314,5 +351,41 @@ public class GrindStoneMenu implements InventoryHolder {
                 plugin.getLogger().warning(plugin.getConfig().getString("i18n.consoles.warning.invalid-type"));
         }
         return true;
+    }
+
+    public static ItemStack getHolderSlot(){
+        String material = plugin.getConfig().getString("i18n.gui.holder.type");
+        ItemStack holder = new ItemStack(Material.getMaterial(material));
+        ItemMeta holderMeta = holder.getItemMeta();
+        holderMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.holder.name")));
+        holderMeta.setLore(plugin.format(plugin.getConfig().getStringList("i18n.gui.holder.lore")));
+        holderMeta.setCustomModelData(1);
+        holder.setItemMeta(holderMeta);
+
+        return holder;
+    }
+
+    public static void changePage(int toPage, Player player, Inventory inventory){
+        if(toPage == 0){
+            clearEnchantments(inventory);
+            currentPage = 1;
+            return;
+        }
+        ItemStack itemStack = inventory.getItem(4);
+
+        if(toPage == 1){
+            if(currentPage < pages){
+                clearEnchantments(inventory);
+                currentPage = currentPage + 1;
+                setupEnchantments(itemStack, player, inventory);
+            }
+        }
+        else{
+            if(currentPage > 1){
+                clearEnchantments(inventory);
+                currentPage = currentPage - 1;
+                setupEnchantments(itemStack, player, inventory);
+            }
+        }
     }
 }

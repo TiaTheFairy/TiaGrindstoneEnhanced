@@ -38,6 +38,7 @@ public class GrindstoneClicks implements Listener {
             if(slot == 4){
                 ItemStack currentItem = event.getCurrentItem();
                 ItemStack cursorItem = event.getCursor();
+                GrindStoneMenu.changePage(0, player, event.getInventory());
 
                 if(currentItem == null){
                     if(!checkItemAllow(cursorItem, player)){
@@ -60,6 +61,20 @@ public class GrindstoneClicks implements Listener {
             else if (slot == 8){
                 if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.GRINDSTONE){
                     GrindStoneMenu.removeAllEnchantments(player, event.getInventory());
+                }
+                event.setCancelled(true);
+            }
+
+            //      Page slot
+            else if (slot == 45){
+                if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.previous.type"))){
+                    GrindStoneMenu.changePage(-1, player, event.getInventory());
+                }
+                event.setCancelled(true);
+            }
+            else if (slot == 53){
+                if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.next.type"))){
+                    GrindStoneMenu.changePage(1, player, event.getInventory());
                 }
                 event.setCancelled(true);
             }
@@ -95,6 +110,11 @@ public class GrindstoneClicks implements Listener {
     }
 
     public boolean checkItemAllow(ItemStack item, Player player){
+        List<String> blacklistName = plugin.getConfig().getStringList("limits.blacklist-names");
+        if(blacklistName.stream().anyMatch(string -> item.getItemMeta().getDisplayName().toLowerCase().contains(string.toLowerCase()))){
+            return false;
+        }
+
         if(item.getType() == Material.ENCHANTED_BOOK){
             return plugin.getConfig().getBoolean("limits.books.allow");
         }

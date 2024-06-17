@@ -34,10 +34,18 @@ limits:
       - "netherite_"
       - "bow"
       - "crossbow"
+      - "shield"
+      - "fishing_rod"
+      - "flint_and_steel"
+      - "shears"
+      - "_on_a_stick"
+      - "elytra"
+      - "trident"
+      - "turtle_helmet"
 
     #   Item types that required permission to clean
     special-list:
-      - "trident"
+      - "blaze_rod"
 
   books:
     #   Enable book clean?
@@ -111,12 +119,12 @@ i18n:
       - "&b%type% to remove this enchantment"
       - "&e | &b%price% %unit%"
     types:
-      give-coin: "Money you get"
-      take-coin: "Money you lose"
-      give-exp: "EXP you get"
-      take-exp: "EXP you lose"
-      give-exp-lvl: "Lvl you get"
-      take-exp-lvl: "Lvl you lose"
+      give-coin: "Money got"
+      take-coin: "Money lost"
+      give-exp: "EXP got"
+      take-exp: "EXP lost"
+      give-exp-lvl: "Lvl got"
+      take-exp-lvl: "Lvl lost"
     unit:
       give-coin: " coin(s)"
       take-coin: " coin(s)"
@@ -125,15 +133,24 @@ i18n:
       give-exp-lvl: " level(s)"
       take-exp-lvl: " level(s)"
     page:
-      #   Multi-page is under development. Now only 21 enchantments will be shown in GUI
-      next: "Next Page (%current%/%total%)"
-      previous: "Previous Page (%current%/%total%)"
+      next:
+        type: ARROW
+        name: "Next Page"
+        lore:
+          - "%current%/%total%"
+      previous:
+        type: ARROW
+        name: "Previous Page"
+        lore:
+          - "%current%/%total%"
     holder:
       type: WHITE_STAINED_GLASS_PANE
       name: "&ePut your item inside slot above"
       lore:
         - ""
   consoles:
+    config:
+      update: "As TiaGrindstoneEnhanced has updated. A new config file is generated and old config has been renamed to config-old-%version%.yml."
     vault:
       not-found: "Vault is not installed. Some feature may be unavailable."
       no-provider: "Vault found. But no economy provider found. Some feature may be unavailable."
@@ -142,6 +159,5 @@ i18n:
       negative-price: "Price cannot be negative number! Action cancelled!"
       invalid-type: "Invalid price type! Charge none!"
 
-
 #   DO NOT EDIT THIS LINE UNLESS YOU ARE TOLD TO !
-version: 1.0.0
+version: 1.1.0

@@ -1,5 +1,5 @@
 name: TiaGrindstoneEnhanced
-version: '1.0.0'
+version: '1.1.0'
 main: org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced
 api-version: '1.20'
 depend: [Vault]

@@ -1,11 +1,9 @@
 package org.tiathefairyland.tiagrindstoneenhanced;
 
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.tiathefairyland.tiagrindstoneenhanced.Commands.CommandsHandler;
+import org.tiathefairyland.tiagrindstoneenhanced.Config.ConfigManager;
 import org.tiathefairyland.tiagrindstoneenhanced.Hookers.VaultHooker;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneOpen;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneClicks;
@@ -15,10 +13,12 @@ import java.util.List;
 
 public final class TiaGrindstoneEnhanced extends JavaPlugin {
     VaultHooker vaultHooker;
+    ConfigManager configManager;
     @Override
     public void onEnable() {
-        // Plugin startup logic
         saveDefaultConfig();
+        configManager = new ConfigManager(this);
+        configManager.configUpdate();
 
         CommandsHandler commandHandler = new CommandsHandler(this);
         getCommand("tiagrindstoneenhanced").setExecutor(commandHandler);
@@ -33,7 +33,6 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
 
     @Override
     public void onDisable() {
-//        getServer().getPluginManager().re
     }
 
     public VaultHooker getVault(){
@@ -57,5 +56,23 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
             newList.add(format(string));
         }
         return newList;
+    }
+
+    public String replacePlaceholder(String string, List<String> placeholders, List<String> targets){
+        for(int i=0; i< placeholders.size(); i++){
+            string = string.replace(placeholders.get(i), targets.get(i));
+        }
+        return string;
+    }
+
+    public List<String> replacePlaceholder(List<String> stringList, List<String> placeholders, List<String> targets){
+        List<String> newStringList = new ArrayList<>();
+        for(String string : stringList){
+            for(int i=0; i< placeholders.size(); i++){
+                string = string.replace(placeholders.get(i), targets.get(i));
+            }
+            newStringList.add(string);
+        }
+        return newStringList;
     }
 }
