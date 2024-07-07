@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class ConfigManager {
     private TiaGrindstoneEnhanced plugin;
 
-    public String version = "1.1.0";
+    public String configVersion = "1.1.0";
 
     public ConfigManager(TiaGrindstoneEnhanced plugin){
         this.plugin = plugin;
@@ -17,7 +17,7 @@ public class ConfigManager {
 
     public void configUpdate(){
         String configVersion = plugin.getConfig().getString("version").replace(".", "");
-        int pluginVersion = Integer.parseInt(version.replace(".", "")) ;
+        int pluginVersion = Integer.parseInt(configVersion.replace(".", "")) ;
         if(Integer.parseInt(configVersion) < pluginVersion){
             File configFile = new File(plugin.getDataFolder(), "config.yml");
             if(configFile.exists()){

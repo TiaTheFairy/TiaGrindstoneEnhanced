@@ -201,12 +201,12 @@ public class GrindStoneMenu implements InventoryHolder {
                 price = plugin.getConfig().getInt("costs.removing-all.fix-amount");
             }
 
-            grindstoneMeta.setLore(
+            grindstoneMeta.setLore(plugin.format(
                     plugin.replacePlaceholder(plugin.getConfig().getStringList("i18n.gui.lore"), new ArrayList<>(Arrays.asList("%type%", "%unit%", "%price")),
                     new ArrayList<>(Arrays.asList(
                             plugin.getConfig().getString("i18n.gui.types." + costType),
                             plugin.getConfig().getString("i18n.gui.unit." + costType),
-                            String.valueOf(price)))));
+                            String.valueOf(price))))));
 
             grindstone.setItemMeta(grindstoneMeta);
             inventory.setItem(8, grindstone);
