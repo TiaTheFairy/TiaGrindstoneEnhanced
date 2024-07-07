@@ -1,10 +1,9 @@
 package org.tiathefairyland.tiagrindstoneenhanced;
 
-import net.kyori.adventure.text.TranslatableComponent;
+import dev.aurelium.auraskills.api.skill.Skills;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -238,10 +237,12 @@ public class GrindStoneMenu implements InventoryHolder {
         }
         String priceType = plugin.getConfig().getString("costs.removing-single.type");
         int price = 0;
+        int enchantLevel = 0;
         Enchantment enchantment = null;
         for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
             enchantment = entry.getKey();
             price = countCostPrice(enchantment, entry.getValue());
+            enchantLevel = entry.getValue();
         }
         if(price < 0){
             plugin.getLogger().severe(plugin.getConfig().getString("i18n.consoles.warning.negative-price"));
@@ -261,9 +262,12 @@ public class GrindStoneMenu implements InventoryHolder {
                     originalItem.setItemMeta(meta1);
                 }
             }
-            else{
+            else {
                 originalItem.removeEnchantment(enchantment);
             }
+
+            giveAuraSkillsXp(true, player, enchantLevel);
+
             String enchantName = enchantment.getKey().getKey();
             enchantName = enchantName.substring(0, 1).toUpperCase() + enchantName.substring(1);
             enchantName = enchantName.replace("_", " ");
@@ -280,12 +284,14 @@ public class GrindStoneMenu implements InventoryHolder {
         ItemStack item = inventory.getItem(4);
         String priceType = plugin.getConfig().getString("costs.removing-all.type");
         int price = 0;
+        int enchantLevel = 0;
 
         Map<Enchantment, Integer> enchants = getItemEnchantments(item, player);
 
         if(plugin.getConfig().getBoolean("costs.remaining-all.count-all")){
             for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
                 price = price + countCostPrice(entry.getKey(), entry.getValue());
+                enchantLevel = enchantLevel + entry.getValue();
             }
             price = Math.max(plugin.getConfig().getInt("costs.removing-all.count-all-max"), price);
         }
@@ -302,12 +308,14 @@ public class GrindStoneMenu implements InventoryHolder {
                 item.setType(Material.BOOK);
             }
 
+            giveAuraSkillsXp(false, player, enchantLevel);
             player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove-all")));
         }
         else{
             String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
             player.sendMessage(plugin.format(notEnough));
         }
+
         player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
     }
 
@@ -386,6 +394,15 @@ public class GrindStoneMenu implements InventoryHolder {
                 currentPage = currentPage - 1;
                 setupEnchantments(itemStack, player, inventory);
             }
+        }
+    }
+
+    public static void giveAuraSkillsXp(boolean single, Player player, int enchantmentLevel){
+        if(plugin.getAuraSkills() != null){
+            plugin.getAuraSkills().givePlayerExp(player, Skills.ENCHANTING, single ?
+                    enchantmentLevel * plugin.getConfig().getDouble("hooks.AuraSkills.enchanting.grindstone-single-per-level"):
+                            enchantmentLevel * plugin.getConfig().getDouble("hooks.AuraSkills.enchanting.grindstone-all-per-level")
+                    );
         }
     }
 }

@@ -159,5 +159,14 @@ i18n:
       negative-price: "Price cannot be negative number! Action cancelled!"
       invalid-type: "Invalid price type! Charge none!"
 
+hooks:
+  AuraSkills:
+    enabled: true
+    enchanting:
+      give-xp: true
+      use-multiplier: true
+      grindstone-single-per-level: 36
+      grindstone-all-per-level: 18
+
 #   DO NOT EDIT THIS LINE UNLESS YOU ARE TOLD TO !
-version: 1.1.0
+version: 1.2.0

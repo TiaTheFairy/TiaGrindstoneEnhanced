@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.tiathefairyland.tiagrindstoneenhanced.Commands.CommandsHandler;
 import org.tiathefairyland.tiagrindstoneenhanced.Config.ConfigManager;
+import org.tiathefairyland.tiagrindstoneenhanced.Hookers.AuraSkillsHooker;
 import org.tiathefairyland.tiagrindstoneenhanced.Hookers.VaultHooker;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneOpen;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneClicks;
@@ -13,6 +14,7 @@ import java.util.List;
 
 public final class TiaGrindstoneEnhanced extends JavaPlugin {
     VaultHooker vaultHooker;
+    AuraSkillsHooker auraSkillsHooker;
     ConfigManager configManager;
     @Override
     public void onEnable() {
@@ -27,16 +29,11 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GrindstoneClicks(this), this);
         getServer().getPluginManager().registerEvents(new GrindstoneOpen(this), this);
 
-        vaultHooker = new VaultHooker(this);
-        vaultHooker.registerVault();
+        hookPlugins();
     }
 
     @Override
     public void onDisable() {
-    }
-
-    public VaultHooker getVault(){
-        return vaultHooker;
     }
 
     public TiaGrindstoneEnhanced getPlugin(){
@@ -74,5 +71,22 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
             newStringList.add(string);
         }
         return newStringList;
+    }
+
+    public void hookPlugins(){
+        vaultHooker = new VaultHooker(this);
+        vaultHooker.registerVault();
+
+        if(getPlugin().getConfig().getBoolean("hooks.AuraSkills.enabled")){
+            auraSkillsHooker = new AuraSkillsHooker(this);
+        }
+    }
+
+    public VaultHooker getVault(){
+        return vaultHooker;
+    }
+
+    public AuraSkillsHooker getAuraSkills() {
+        return auraSkillsHooker;
     }
 }
