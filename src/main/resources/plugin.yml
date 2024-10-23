@@ -3,6 +3,9 @@ version: '${version}'
 main: org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced
 api-version: '1.20'
 depend: [Vault]
+softdepend:
+  - Auraskills
+  - PlayerPoints
 
 commands:
   tiagrindstoneenhanced:

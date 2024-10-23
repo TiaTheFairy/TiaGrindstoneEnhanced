@@ -3,33 +3,35 @@ package org.tiathefairyland.tiagrindstoneenhanced.Hookers;
 import dev.aurelium.auraskills.api.AuraSkillsApi;
 import dev.aurelium.auraskills.api.skill.Skills;
 import dev.aurelium.auraskills.api.user.SkillsUser;
+import org.black_ixx.playerpoints.PlayerPointsAPI;
 import org.bukkit.entity.Player;
 import org.tiathefairyland.tiagrindstoneenhanced.TiaGrindstoneEnhanced;
 
 public class AuraSkillsHooker {
-    public static TiaGrindstoneEnhanced plugin;
-    private AuraSkillsApi auraSkills = null;
+    public TiaGrindstoneEnhanced plugin;
+    private AuraSkillsApi api = null;
 
     public AuraSkillsHooker(TiaGrindstoneEnhanced plugin) {
-        AuraSkillsHooker.plugin = plugin;
-        auraSkills = AuraSkillsApi.get();
+        this.plugin = plugin;
     }
 
-    public boolean givePlayerExp(Player player, Skills skills, double exp){
-        SkillsUser user = auraSkills.getUser(player.getUniqueId());
+    public void hookAuraSkill() {
+        api = AuraSkillsApi.get();
+    }
 
-        if(skills.equals(Skills.ENCHANTING)){
-            if(plugin.getConfig().getBoolean("hooks.AuraSkills.enchanting.give-exp")){
-                if(plugin.getConfig().getBoolean("hook.AuraSkills.enchanting.use-multiplier")){
-                    user.addSkillXp(Skills.ENCHANTING, exp);
-                }
-                else{
-                    user.addSkillXpRaw(Skills.ENCHANTING, exp);
-                }
-                return true;
-            }
+    public boolean givePlayerExp(Player player, double exp) {
+        SkillsUser user = api.getUser(player.getUniqueId());
+
+        if (!plugin.getConfig().getBoolean("hooks.AuraSkills.enchanting.give-xp")) {
             return false;
         }
-        return false;
+
+        if (plugin.getConfig().getBoolean("hooks.AuraSkills.enchanting.use-multiplier")) {
+            user.addSkillXp(Skills.ENCHANTING, exp);
+        }
+        else {
+            user.addSkillXpRaw(Skills.ENCHANTING, exp);
+        }
+        return true;
     }
 }

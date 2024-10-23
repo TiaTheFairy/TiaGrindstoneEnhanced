@@ -27,12 +27,35 @@ public class GrindstoneClicks implements Listener {
         Player player = (Player) event.getWhoClicked();
 
         if (event.getClickedInventory() != null && name.equalsIgnoreCase(title)) {
-            if(event.getClick().isShiftClick()){
-                event.setCancelled(true);
-            }
-
             int slot = event.getRawSlot();
 
+            if(event.getClick().isShiftClick()){
+                ItemStack currentItem = event.getCurrentItem();
+                //   Get item back with shift click
+                if(slot == 4) {
+                    GrindStoneMenu.clearEnchantments(event.getInventory());
+                }
+                //   Place item with shift click
+                else if(slot > 53){
+                    if(checkItemAllow(currentItem, player)){
+                        if(player.getOpenInventory().getItem(4) == null || player.getOpenInventory().getItem(4).getType() == Material.AIR){
+                            GrindStoneMenu.setupEnchantments(currentItem, player, event.getInventory());
+                        }
+                        else{
+                            event.setCancelled(true);
+                        }
+                    }
+                    else{
+                        player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.not-allow")));
+                        event.setCancelled(true);
+                    }
+                }
+                else{
+                    event.setCancelled(true);
+                }
+
+                return;
+            }
 
             //      Slot to place item
             if(slot == 4){
@@ -59,6 +82,11 @@ public class GrindstoneClicks implements Listener {
 
             //      Remove all slot
             else if (slot == 8){
+                if(event.getInventory().getItem(4) == null || event.getInventory().getItem(4).getType() == Material.AIR){
+                    event.getWhoClicked().closeInventory();
+                    event.setCancelled(true);
+                }
+
                 if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.GRINDSTONE){
                     GrindStoneMenu.removeAllEnchantments(player, event.getInventory());
                 }
@@ -67,12 +95,22 @@ public class GrindstoneClicks implements Listener {
 
             //      Page slot
             else if (slot == 45){
+                if(event.getInventory().getItem(4) == null || event.getInventory().getItem(4).getType() == Material.AIR){
+                    event.getWhoClicked().closeInventory();
+                    event.setCancelled(true);
+                }
+
                 if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.previous.type"))){
                     GrindStoneMenu.changePage(-1, player, event.getInventory());
                 }
                 event.setCancelled(true);
             }
             else if (slot == 53){
+                if(event.getInventory().getItem(4) == null || event.getInventory().getItem(4).getType() == Material.AIR){
+                    event.getWhoClicked().closeInventory();
+                    event.setCancelled(true);
+                }
+
                 if(event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.getMaterial(plugin.getConfig().getString("i18n.gui.page.next.type"))){
                     GrindStoneMenu.changePage(1, player, event.getInventory());
                 }
@@ -88,13 +126,15 @@ public class GrindstoneClicks implements Listener {
             else if(slot <= 53){
                 ItemStack currentItem = event.getCurrentItem();
                 ItemStack cursorItem = event.getCursor();
+                if(event.getInventory().getItem(4) == null || event.getInventory().getItem(4).getType() == Material.AIR){
+                    event.getWhoClicked().closeInventory();
+                    event.setCancelled(true);
+                }
 
                 if(cursorItem.getType() == Material.AIR && currentItem != null && currentItem.getType() == Material.ENCHANTED_BOOK){
                     GrindStoneMenu.removeEnchantments(currentItem, player, event.getInventory());
                 }
-                else{
-                    event.setCancelled(true);
-                }
+                event.setCancelled(true);
             }
         }
     }
@@ -110,9 +150,20 @@ public class GrindstoneClicks implements Listener {
     }
 
     public boolean checkItemAllow(ItemStack item, Player player){
+        if(item == null || item.getType() == Material.AIR || item.getItemMeta() == null){
+            return false;
+        }
+
         List<String> blacklistName = plugin.getConfig().getStringList("limits.blacklist-names");
         if(blacklistName.stream().anyMatch(string -> item.getItemMeta().getDisplayName().toLowerCase().contains(string.toLowerCase()))){
             return false;
+        }
+
+        if(item.hasItemMeta() && item.getItemMeta().hasLore()){
+            List<String> blacklistLore = plugin.getConfig().getStringList("limits.blacklist-lores");
+            if(item.lore().stream().anyMatch(lore->blacklistLore.stream().anyMatch(blore->lore.toString().contains(blore)))){
+                return false;
+            }
         }
 
         if(item.getType() == Material.ENCHANTED_BOOK){

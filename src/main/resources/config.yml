@@ -20,6 +20,12 @@ grindstone:
   send-message-on-open: true
   #   Refer to i18n-message-remove
   send-message-on-remove: true
+  #   Take item/book back when there is no enchantment on it
+  take-back:
+    enabled: true
+    #   When enabled, item will be dropped if player's inventory is full.
+    #   Otherwise, leave the item inside GUI. (Still drop after close GUI)
+    drop-when-full-inventory: true
 
 limits:
   items:
@@ -60,11 +66,15 @@ limits:
     - "Gift Chestplate"
     - "Book of EXP"
 
+  #   Items/Books containing following lore (key world) will not be allowed.
+  blacklist-lores:
+    - "Soul Bind"
+
 costs:
   #   Cost something on removing enchantments.
   #   none  : nothing
-  #   give-coin     : give Vault coins. Required Vault!
-  #   take-coin     : take Vault coins. Required Vault!
+  #   give-coin     : give Vault coins
+  #   take-coin     : take Vault coins
   #   give-exp      : give vanilla exp
   #   take-exp      : take vanilla exp
   #   give-exp-lvl  : give vanilla exp level
@@ -103,21 +113,26 @@ i18n:
     permission-grindstone: "&e[Enhanced Grindstone] &cYou don't have the permission to use the grindstone."
     permission-open: "&e[Enhanced Grindstone] &cYou don't have the permission to use Enhanced Grindstone."
     remove: "&e[Enhanced Grindstone] &aSuccessfully remove %enchantment% from your item."
+    remove-list: "&e[Enhanced Grindstone] &aSuccessfully remove selected enchantments from your item."
     remove-all: "&e[Enhanced Grindstone] &aSuccessfully remove all enchantments from your item."
     empty: "&e[Enhanced Grindstone] &cThis item have nothing to remove. Or you don't have permission to remove some enchantments."
     not-allow: "&e[Enhanced Grindstone] &cThis item is not allowed in Grindstone."
-    not-enough: "&e[Enhanced Grindstone] &cYou don't have enough %type% to do this!"
+    not-enough: "&e[Enhanced Grindstone] &cYou don't have enough %unit% to do this!"
     item-dropped: "&e[Enhanced Grindstone] &aYou forgot your item! It's dropped at your location because your inventory is full!"
     reload: "&e[Enhanced Grindstone] &aConfig reloaded."
     reload-new: "&e[Enhanced Grindstone] &aConfig file not exists! Regenerating!"
   gui:
     title: "&eEnhanced Grindstone"
-    clear: "&eRemove All Enchantments"
-    lore:
-      - ""
-      - "&b Click to remove this enchantment"
-      - "&b%type% to remove this enchantment"
-      - "&e | &b%price% %unit%"
+    remove:
+      lore:
+        - "&bClick to remove this enchantment"
+        - "&b%type%: %price% %unit%"
+    clear:
+      type: GRINDSTONE
+      name: "&eRemove All Enchantments"
+      lore:
+        - "&b Click to remove all enchantments"
+        - "&b%type%: %price% %unit%"
     types:
       give-coin: "Money got"
       take-coin: "Money lost"
@@ -125,13 +140,17 @@ i18n:
       take-exp: "EXP lost"
       give-exp-lvl: "Lvl got"
       take-exp-lvl: "Lvl lost"
+      give-pp: "Points got"
+      take-pp: "Points lost"
     unit:
-      give-coin: " coin(s)"
-      take-coin: " coin(s)"
-      give-exp: " point(s)"
-      take-exp: " point(s)"
-      give-exp-lvl: " level(s)"
-      take-exp-lvl: " level(s)"
+      give-coin: "coin(s)"
+      take-coin: "coin(s)"
+      give-exp: "point(s)"
+      take-exp: "point(s)"
+      give-exp-lvl: "level(s)"
+      take-exp-lvl: "level(s)"
+      give-pp: "point(s)"
+      take-pp: "point(s)"
     page:
       next:
         type: ARROW
@@ -151,22 +170,21 @@ i18n:
   consoles:
     config:
       update: "As TiaGrindstoneEnhanced has updated. A new config file is generated and old config has been renamed to config-old-%version%.yml."
-    vault:
-      not-found: "Vault is not installed. Some feature may be unavailable."
-      no-provider: "Vault found. But no economy provider found. Some feature may be unavailable."
-      hooked: "Vault hooked!"
     warning:
       negative-price: "Price cannot be negative number! Action cancelled!"
       invalid-type: "Invalid price type! Charge none!"
 
 hooks:
   AuraSkills:
-    enabled: true
+    enabled: false
     enchanting:
       give-xp: true
       use-multiplier: true
       grindstone-single-per-level: 36
       grindstone-all-per-level: 18
+  PlayerPoints:
+    # If enabled. You can use type "take-pp" or "give-pp".
+    enabled: false
 
 #   DO NOT EDIT THIS LINE UNLESS YOU ARE TOLD TO !
-version: 1.2.0
+version: 1.3.2

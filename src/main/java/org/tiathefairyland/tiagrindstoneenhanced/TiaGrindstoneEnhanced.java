@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.tiathefairyland.tiagrindstoneenhanced.Commands.CommandsHandler;
 import org.tiathefairyland.tiagrindstoneenhanced.Config.ConfigManager;
 import org.tiathefairyland.tiagrindstoneenhanced.Hookers.AuraSkillsHooker;
+import org.tiathefairyland.tiagrindstoneenhanced.Hookers.PlayerPointsHooker;
 import org.tiathefairyland.tiagrindstoneenhanced.Hookers.VaultHooker;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneOpen;
 import org.tiathefairyland.tiagrindstoneenhanced.Listener.GrindstoneClicks;
@@ -14,7 +15,8 @@ import java.util.List;
 
 public final class TiaGrindstoneEnhanced extends JavaPlugin {
     VaultHooker vaultHooker;
-    AuraSkillsHooker auraSkillsHooker;
+    AuraSkillsHooker auraSkillsHooker = null;
+    PlayerPointsHooker playerPointsHooker = null;
     ConfigManager configManager;
     @Override
     public void onEnable() {
@@ -74,11 +76,32 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
     }
 
     public void hookPlugins(){
-        vaultHooker = new VaultHooker(this);
-        vaultHooker.registerVault();
+        if(getServer().getPluginManager().isPluginEnabled("Vault")){
+            vaultHooker = new VaultHooker(this);
+            vaultHooker.hookVault();
+        }
+        else{
+            getServer().getLogger().warning("Vault is not installed. Plugin may not work as supposed.");
+        }
 
-        if(getPlugin().getConfig().getBoolean("hooks.AuraSkills.enabled")){
-            auraSkillsHooker = new AuraSkillsHooker(this);
+
+        if(getConfig().getBoolean("hooks.AuraSkills.enabled")){
+            if(getServer().getPluginManager().isPluginEnabled("AuraSkills")){
+                auraSkillsHooker = new AuraSkillsHooker(this);
+                auraSkillsHooker.hookAuraSkill();
+            }
+            else{
+                getServer().getLogger().severe("AuraSkills hooks is enabled in config. But we can't find AuraSkills in server.");
+            }
+        }
+        if(getConfig().getBoolean("hooks.PlayerPoints.enabled")){
+            if(getServer().getPluginManager().isPluginEnabled("PlayerPoints")){
+                playerPointsHooker = new PlayerPointsHooker(this);
+                playerPointsHooker.hookPlayerPoints();
+            }
+            else{
+                getServer().getLogger().severe("PlayerPoints hooks is enabled in config. But we can't find PlayerPoints in server.");
+            }
         }
     }
 
@@ -88,5 +111,9 @@ public final class TiaGrindstoneEnhanced extends JavaPlugin {
 
     public AuraSkillsHooker getAuraSkills() {
         return auraSkillsHooker;
+    }
+
+    public PlayerPointsHooker getPlayerPoints(){
+        return playerPointsHooker;
     }
 }

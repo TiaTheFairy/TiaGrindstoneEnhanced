@@ -1,12 +1,10 @@
 package org.tiathefairyland.tiagrindstoneenhanced;
 
-import dev.aurelium.auraskills.api.skill.Skills;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -58,6 +56,9 @@ public class GrindStoneMenu implements InventoryHolder {
     }
 
     public static Map<Enchantment, Integer> getItemEnchantments(ItemStack item, Player player)  {
+        if(item == null){
+            return new HashMap<>();
+        }
         Map<Enchantment, Integer> enchantments = new HashMap<>();
 
         if(item.getType() == Material.ENCHANTED_BOOK){
@@ -96,6 +97,7 @@ public class GrindStoneMenu implements InventoryHolder {
     }
 
     public static void setupEnchantments(ItemStack item, Player player, Inventory inventory){
+        clearEnchantments(inventory);
         Map<Enchantment, Integer> enchantments = getItemEnchantments(item, player);
 
         List<ItemStack> enchantedBooks = new ArrayList<>();
@@ -162,7 +164,7 @@ public class GrindStoneMenu implements InventoryHolder {
                     enchants = book.getEnchantments();
                 }
 
-                List<String> loreTemplate = plugin.getConfig().getStringList("i18n.gui.lore");
+                List<String> loreTemplate = plugin.getConfig().getStringList("i18n.gui.remove.lore");
 
                 List<String> lores = new ArrayList<>();
 
@@ -183,9 +185,9 @@ public class GrindStoneMenu implements InventoryHolder {
                 inventory.setItem(slotList.get(i % 21), book);
             }
 
-            ItemStack grindstone = new ItemStack(Material.GRINDSTONE);
+            ItemStack grindstone = new ItemStack(Material.getMaterial(plugin.getConfig().getString("i18n.gui.clear.type")));
             ItemMeta grindstoneMeta = grindstone.getItemMeta();
-            grindstoneMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.clear")));
+            grindstoneMeta.setDisplayName(plugin.format(plugin.getConfig().getString("i18n.gui.clear.name")));
             String costType = plugin.getConfig().getString("costs.removing-all.type");
             int price = 0;
 
@@ -201,7 +203,7 @@ public class GrindStoneMenu implements InventoryHolder {
             }
 
             grindstoneMeta.setLore(plugin.format(
-                    plugin.replacePlaceholder(plugin.getConfig().getStringList("i18n.gui.lore"), new ArrayList<>(Arrays.asList("%type%", "%unit%", "%price")),
+                    plugin.replacePlaceholder(plugin.getConfig().getStringList("i18n.gui.clear.lore"), new ArrayList<>(Arrays.asList("%type%", "%unit%", "%price%")),
                     new ArrayList<>(Arrays.asList(
                             plugin.getConfig().getString("i18n.gui.types." + costType),
                             plugin.getConfig().getString("i18n.gui.unit." + costType),
@@ -274,10 +276,13 @@ public class GrindStoneMenu implements InventoryHolder {
             player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove").replace("%enchantment%", enchantName)));
         }
         else{
-            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
+            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%unit%", plugin.getConfig().getString("i18n.gui.unit." + priceType));
             player.sendMessage(plugin.format(notEnough));
         }
-        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+
+
+        //player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+        setupEnchantments(inventory.getItem(4), player, inventory);
     }
 
     public static void removeAllEnchantments(Player player, Inventory inventory){
@@ -286,13 +291,14 @@ public class GrindStoneMenu implements InventoryHolder {
         int price = 0;
         int enchantLevel = 0;
 
+
         Map<Enchantment, Integer> enchants = getItemEnchantments(item, player);
+        for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
+            enchantLevel = enchantLevel + entry.getValue();
+            price = price + countCostPrice(entry.getKey(), entry.getValue());
+        }
 
         if(plugin.getConfig().getBoolean("costs.remaining-all.count-all")){
-            for(Map.Entry<Enchantment, Integer> entry : enchants.entrySet()){
-                price = price + countCostPrice(entry.getKey(), entry.getValue());
-                enchantLevel = enchantLevel + entry.getValue();
-            }
             price = Math.max(plugin.getConfig().getInt("costs.removing-all.count-all-max"), price);
         }
         else{
@@ -312,11 +318,12 @@ public class GrindStoneMenu implements InventoryHolder {
             player.sendMessage(plugin.format(plugin.getConfig().getString("i18n.message.remove-all")));
         }
         else{
-            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%type%", plugin.getConfig().getString("i18n.gui.types." + priceType));
+            String notEnough = plugin.getConfig().getString("i18n.message.not-enough").replace("%unit%", plugin.getConfig().getString("i18n.gui.unit." + priceType));
             player.sendMessage(plugin.format(notEnough));
         }
 
-        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+        //player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+        setupEnchantments(inventory.getItem(4), player, inventory);
     }
 
     public static boolean cost(String priceType, int price, Player player){
@@ -354,6 +361,15 @@ public class GrindStoneMenu implements InventoryHolder {
                     return false;
                 }
                 player.setLevel(player.getLevel() - price);
+                break;
+            case "give-pp":
+                plugin.getPlayerPoints().givePlayerPoints(player, price);
+                break;
+            case "take-pp":
+                if(plugin.getPlayerPoints().getPlayerPoints(player) < price){
+                    return false;
+                }
+                plugin.getPlayerPoints().takePlayerPoints(player, price);
                 break;
             default:
                 plugin.getLogger().warning(plugin.getConfig().getString("i18n.consoles.warning.invalid-type"));
@@ -399,7 +415,7 @@ public class GrindStoneMenu implements InventoryHolder {
 
     public static void giveAuraSkillsXp(boolean single, Player player, int enchantmentLevel){
         if(plugin.getAuraSkills() != null){
-            plugin.getAuraSkills().givePlayerExp(player, Skills.ENCHANTING, single ?
+            plugin.getAuraSkills().givePlayerExp(player, single ?
                     enchantmentLevel * plugin.getConfig().getDouble("hooks.AuraSkills.enchanting.grindstone-single-per-level"):
                             enchantmentLevel * plugin.getConfig().getDouble("hooks.AuraSkills.enchanting.grindstone-all-per-level")
                     );

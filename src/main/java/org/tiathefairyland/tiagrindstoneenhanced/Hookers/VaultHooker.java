@@ -12,20 +12,14 @@ public class VaultHooker {
         VaultHooker.plugin = plugin;
     }
 
-    public void registerVault(){
-        if(plugin.getServer().getPluginManager().getPlugin("Vault") == null){
-            plugin.getLogger().warning(plugin.getConfig().getString("i18n.consoles.vault.not-found"));
+    public void hookVault(){
+        RegisteredServiceProvider<Economy> registeredServiceProvider = plugin.getServer().getServicesManager().getRegistration(Economy.class);
+        if(registeredServiceProvider != null){
+            economy = registeredServiceProvider.getProvider();
+            plugin.getLogger().info("Vault hooked successfully!");
         }
         else{
-            RegisteredServiceProvider<Economy> registeredServiceProvider = plugin.getServer().getServicesManager().getRegistration(Economy.class);
-            if(registeredServiceProvider != null){
-                economy = registeredServiceProvider.getProvider();
-                plugin.getLogger().info(plugin.getConfig().getString("i18n.consoles.vault.hooked"));
-            }
-            else{
-                plugin.getLogger().warning(plugin.getConfig().getString("i18n.consoles.vault.no-provider"));
-            }
-
+            plugin.getLogger().warning("Vault found. But no economy provider found. Plugin may not work as supposed");
         }
     }
 
